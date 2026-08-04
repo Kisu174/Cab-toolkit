@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Catch a Brainrot Toolkit</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#161a22; --panel2:#1e232e; --border:#2a3040;
+    --text:#e8ebf2; --muted:#9aa3b5; --accent:#7c5cff; --accent2:#00d1a0;
+    --danger:#ff5c7a; --warn:#ffb454;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding-bottom:70px;}
+  header{padding:14px 16px 10px;text-align:center;}
+  header h1{margin:0;font-size:1.25rem;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  header p{margin:4px 0 0;color:var(--muted);font-size:.78rem;}
+  nav{position:sticky;top:0;z-index:50;display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--border);}
+  nav button{flex:1 0 auto;padding:12px 10px;background:none;border:none;color:var(--muted);font-size:.78rem;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent;}
+  nav button.active{color:var(--text);border-bottom-color:var(--accent);}
+  main{padding:14px;max-width:900px;margin:0 auto;}
+  .tab{display:none;}
+  .tab.active{display:block;}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .card h2{margin:0 0 10px;font-size:1rem;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .field{flex:1 1 140px;margin-bottom:10px;}
+  label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:4px;}
+  select,input[type=text],input[type=number]{
+    width:100%;padding:10px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-size:.9rem;
+  }
+  input[type=range]{width:100%;}
+  .chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text);}
+  button.btn{background:var(--accent);color:#fff;border:none;padding:11px 16px;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer;}
+  button.btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text);}
+  button.btn.small{padding:6px 10px;font-size:.72rem;}
+  .disclaimer{background:#2a1f0f;border:1px solid var(--warn);color:var(--warn);padding:10px 12px;border-radius:8px;font-size:.75rem;margin-bottom:12px;line-height:1.4;}
+  .notavail{color:var(--muted);font-style:italic;}
+  .results{background:var(--panel2);border-radius:10px;padding:12px;}
+  .result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);font-size:.85rem;}
+  .result-row:last-child{border-bottom:none;}
+  .result-row span:last-child{font-weight:700;color:var(--accent2);}
+  .breakdown{margin-top:10px;font-size:.75rem;color:var(--muted);background:#10131a;padding:10px;border-radius:8px;white-space:pre-wrap;line-height:1.5;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .rot-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;}
+  .rot-card img{width:48px;height:48px;object-fit:contain;margin-bottom:6px;image-rendering:pixelated;}
+  .rot-card .name{font-size:.72rem;font-weight:600;}
+  .rot-card .rarity{font-size:.65rem;color:var(--accent2);margin-top:2px;}
+  .badge{display:inline-block;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:2px 6px;font-size:.65rem;color:var(--muted);margin-right:4px;}
+  .exclusive{color:#ffd700;}
+  .search-bar{display:flex;gap:8px;margin-bottom:10px;}
+  .search-bar input{flex:1;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:flex-end;justify-content:center;}
+  .modal-bg.active{display:flex;}
+  .modal{background:var(--panel);border-radius:16px 16px 0 0;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;padding:18px;border:1px solid var(--border);}
+  .modal h3{margin-top:0;}
+  .close-x{float:right;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;}
+  .status{padding:20px;text-align:center;color:var(--muted);font-size:.85rem;}
+  .status.error{color:var(--danger);}
+  .icon-sm{width:22px;height:22px;vertical-align:middle;object-fit:contain;image-rendering:pixelated;margin-right:4px;}
+  .list-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem;}
+  .list-item:last-child{border-bottom:none;}
+  .list-item .qty{margin-left:auto;color:var(--accent2);font-weight:700;}
+  .sub{font-size:.7rem;color:var(--muted);}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .win{color:var(--accent2)!important;font-weight:800!important;}
+  select#sortField{max-width:100%;}
+  .flex-between{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧠 Catch a Brainrot Toolkit</h1>
+  <p>Live data from the Indieun API · unofficial fan tool</p>
+</header>
+
+<nav id="tabNav">
+  <button data-tab="calc" class="active">Calculator</button>
+  <button data-tab="rots">Brainrots</button>
+  <button data-tab="inventory">Inventory</button>
+  <button data-tab="bags">Bags</button>
+  <button data-tab="skins">Skins</button>
+  <button data-tab="compare">Compare</button>
+</nav>
+
+<main>
+
+  <!-- ================= CALCULATOR ================= -->
+  <div class="tab active" id="tab-calc">
+    <div class="disclaimer">
+      ⚠️ The Catch a Brainrot API does not publish an official damage formula, per-move damage values, energy costs,
+      or healing amounts. This calculator combines the <strong>real</strong> numeric fields the API does expose
+      (Attack stat, and Level / IV which you enter yourself, matching what appears in real inventory data) into a
+      simple, transparent estimate. Anything not backed by real API data is clearly marked
+      <span class="notavail">"not available"</span> or left as an editable custom input, never invented.
+    </div>
+
+    <div class="card">
+      <h2>Inputs</h2>
+      <div class="row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Brainrot (from /cab/rots)</label>
+          <select id="calcRot"></select>
+        </div>
+        <div class="field" style="flex:1 1 100%;">
+          <label>Move / Skill (name only — API provides no per-move stats)</label>
+          <select id="calcMove"></select>
+        </div>
+        <div class="field">
+          <label>Level (your input)</label>
+          <input type="number" id="calcLevel" value="10" min="1" max="999">
+        </div>
+        <div class="field">
+          <label>IV — Individual Value 0–1 (your input)</label>
+          <input type="number" id="calcIV" value="0.80" min="0" max="1" step="0.01">
+        </div>
+        <div class="field">
+          <label>Number of hits</label>
+          <input type="number" id="calcHits" value="1" min="1" max="999">
+        </div>
+        <div class="field">
+          <label>Target HP (you define the enemy)</label>
+          <input type="number" id="calcTargetHP" value="1000" min="1">
+        </div>
+        <div class="field">
+          <label class="chk"><input type="checkbox" id="calcCrit"> Critical hit</label>
+        </div>
+        <div class="field">
+          <label>Crit multiplier (custom, not from API)</label>
+          <input type="number" id="calcCritMult" value="1.5" min="1" step="0.1">
+        </div>
+        <div class="field">
+          <label>Custom energy cost (optional — API has no energy field)</label>
+          <input type="number" id="calcEnergy" placeholder="leave blank if unknown">
+        </div>
+        <div class="field">
+          <label>Custom healing amount (optional — API has no healing field)</label>
+          <input type="number" id="calcHeal" placeholder="leave blank if unknown">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div class="results" id="calcResults"></div>
+      <div class="breakdown" id="calcBreakdown"></div>
+    </div>
+  </div>
+
+  <!-- ================= BRAINROTS ================= -->
+  <div class="tab" id="tab-rots">
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" id="rotSearch" placeholder="Search brainrot name...">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Sort by</label>
+          <select id="sortField">
+            <option value="FullName">Name</option>
+            <option value="Attack">Attack</option>
+            <option value="Health">Health</option>
+            <option value="Speed">Speed</option>
+            <option value="Rarity">Rarity</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Order</label>
+          <select id="sortDir">
+            <option value="desc">High → Low</option>
+            <option value="asc">Low → High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Filter</label>
+          <select id="filterExclusive">
+            <option value="all">All Brainrots</option>
+            <option value="exclusive">Exclusive only</option>
+            <option value="normal">Non-exclusive only</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="rotsStatus" class="status">Loading brainrots...</div>
+    <div class="grid" id="rotsGrid"></div>
+  </div>
+
+  <!-- ================= INVENTORY ================= -->
+  <div class="tab" id="tab-inventory">
+    <div class="card">
+      <h2>Roblox Inventory Viewer</h2>
+      <div class="row">
+        <div class="field" style="flex:1 1 100%;">
+          <label>Roblox User ID</label>
+          <input type="text" id="invUserId" placeholder="e.g. 1559610713" inputmode="numeric">
+        </div>
+      </div>
+      <button class="btn" id="invLoadBtn">Load Inventory</button>
+    </div>
+    <div id="invStatus" class="status">Enter a Roblox User ID above.</div>
+    <div id="invResults"></div>
+  </div>
+
+  <!-- ================= BAGS ================= -->
+  <div class="tab" id="tab-bags">
+    <div class="card">
+      <div class="search-bar">
+        <input type="text" id="bagSearch" placeholder="Search bags / boxes / eggs...">
+      </div>
+    </div>
+    <div id="bagsStatus" class="status">Loading bags...</div>
+    <div class="grid" id="bagsGrid"></div>
+  </div>
+
+  <!-- ================= SKINS ================= -->
+  <div class="tab" id="tab-skins">
+    <div class="card disclaimer">
+      Skins in this API are hoverboard/vehicle skins with a <strong>Speed</strong> stat (movement speed).
+      They have no numeric combat/damage modifier field, so they are shown here for reference only and are
+      <strong>not</strong> applied to the damage calculator.
+    </div>
+    <div id="skinsStatus" class="status">Loading skins...</div>
+    <div class="grid" id="skinsGrid"></div>
+  </div>
+
+  <!-- ================= COMPARE ================= -->
+  <div class="tab" id="tab-compare">
+    <div class="card">
+      <h2>Compare Two Brainrots</h2>
+      <div class="row">
+        <div class="field">
+          <label>Brainrot A</label>
+          <select id="cmpA"></select>
+        </div>
+        <div class="field">
+          <label>Brainrot B</label>
+          <select id="cmpB"></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="compare-grid" id="cmpResults"></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — all API endpoints in one place (add a proxy here later
+   if the API ever blocks direct browser requests)
+   ============================================================ */
+const API = {
+  rots: 'https://indieun.com/cab/rots',
+  bag: 'https://indieun.com/cab/bag',
+  skins: 'https://indieun.com/cab/skins',
+  inventory: (userId) => `https://indieun.com/cab/inventory/${encodeURIComponent(userId)}`,
+  iconBase: 'https://indieun.com/cab/icons/'
+};
+
+const cache = { rots:null, bags:null, skins:null };
+
+/* ============================================================
+   ICON HELPER — one reusable function + fallback
+   ============================================================ */
+function getIconUrl(iconFile){
+  if(!iconFile) return '';
+  return API.iconBase + iconFile;
+}
+function applyIconFallback(imgEl){
+  imgEl.onerror = function(){
+    this.onerror = null;
+    this.style.display = 'none';
+  };
+}
+
+/* ============================================================
+   FETCH HELPERS
+   ============================================================ */
+async function fetchRots(){
+  if(cache.rots) return cache.rots;
+  const res = await fetch(API.rots);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  cache.rots = json.Data || {};
+  return cache.rots;
+}
+
+async function fetchBags(){
+  if(cache.bags) return cache.bags;
+  const res = await fetch(API.bag);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  cache.bags = json.Data || {};
+  return cache.bags;
+}
+
+async function fetchSkins(){
+  if(cache.skins) return cache.skins;
+  const res = await fetch(API.skins);
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  cache.skins = json.Data || {};
+  return cache.skins;
+}
+
+// Inventory is per-user data — deliberately NOT cached globally.
+async function fetchInventory(userId){
+  const res = await fetch(API.inventory(userId));
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  return json.Data || {};
+}
+
+function explainFetchError(err){
+  const msg = String(err && err.message || err);
+  if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('TypeError')){
+    return 'Could not reach the API from this browser. This static page cannot bypass CORS restrictions on its own — if the API blocks cross-origin browser requests, you would need an official CORS-enabled endpoint or proxy added to the API config at the top of the script. (Network error / possible CORS block.)';
+  }
+  return 'API request failed: ' + msg;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+document.getElementById('tabNav').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+});
+
+/* ============================================================
+   CALCULATOR
+   ============================================================ */
+const KNOWN_MOVES = ["Charge","Heal","Bite","Wheel Attack","Splash","Firework","Fire Blast","Shoot",
+  "Whirlpool","Shield","Sword","Zap","Feathers","Bomb","MrBeast","Fry","Grow A Garden"];
+
+function populateCalcSelectors(rotsData){
+  const rotSel = document.getElementById('calcRot');
+  const names = Object.keys(rotsData).sort();
+  rotSel.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+
+  const moveSel = document.getElementById('calcMove');
+  moveSel.innerHTML = '<option value="">(no move data in API — flavor only)</option>' +
+    KNOWN_MOVES.map(m=>`<option value="${m}">${m}</option>`).join('');
+}
+
+// ---- Separate, clearly-named calculation functions ----
+function calculateDamage(baseAttack, level, iv, crit, critMult){
+  // Estimate = real Attack stat (API) x Level (user input) x IV (user input, 0-1)
+  const base = baseAttack * level * iv;
+  const perHit = crit ? base * critMult : base;
+  return { base, perHit };
+}
+
+function calculateHealing(customHealValue){
+  if(customHealValue === '' || customHealValue === null || isNaN(customHealValue)) return null;
+  return Number(customHealValue);
+}
+
+function calculateDamagePerEnergy(totalDamage, customEnergyValue){
+  if(customEnergyValue === '' || customEnergyValue === null || isNaN(customEnergyValue) || Number(customEnergyValue) <= 0) return null;
+  return totalDamage / Number(customEnergyValue);
+}
+
+function calculateRemainingHealth(targetHP, totalDamage){
+  return Math.max(0, targetHP - totalDamage);
+}
+
+function runCalculator(){
+  const rotsData = cache.rots;
+  const resultsEl = document.getElementById('calcResults');
+  const breakdownEl = document.getElementById('calcBreakdown');
+  if(!rotsData){ resultsEl.innerHTML = '<div class="status">Loading brainrot data...</div>'; return; }
+
+  const rotName = document.getElementById('calcRot').value;
+  const rot = rotsData[rotName];
+  if(!rot){ resultsEl.innerHTML = '<div class="status error">Select a brainrot.</div>'; return; }
+
+  const move = document.getElementById('calcMove').value;
+  const level = Math.max(1, Number(document.getElementById('calcLevel').value) || 1);
+  const iv = Math.min(1, Math.max(0, Number(document.getElementById('calcIV').value) || 0));
+  const hits = Math.max(1, Number(document.getElementById('calcHits').value) || 1);
+  const targetHP = Math.max(0, Number(document.getElementById('calcTargetHP').value) || 0);
+  const crit = document.getElementById('calcCrit').checked;
+  const critMult = Number(document.getElementById('calcCritMult').value) || 1;
+  const energyInput = document.getElementById('calcEnergy').value;
+  const healInput = document.getElementById('calcHeal').value;
+
+  const { base, perHit } = calculateDamage(rot.Attack, level, iv, crit, critMult);
+  const totalDamage = perHit * hits;
+  const healing = calculateHealing(healInput);
+  const dmgPerEnergy = calculateDamagePerEnergy(totalDamage, energyInput);
+  const remainingHP = calculateRemainingHealth(targetHP, totalDamage);
+
+  const fmt = (n)=> Number.isFinite(n) ? (Math.round(n*100)/100).toLocaleString() : '—';
+
+  resultsEl.innerHTML = `
+    <div class="result-row"><span>Base Damage (estimate, before crit)</span><span>${fmt(base)}</span></div>
+    <div class="result-row"><span>Damage per hit${crit?' (crit applied)':''}</span><span>${fmt(perHit)}</span></div>
+    <div class="result-row"><span>Number of hits</span><span>${hits}</span></div>
+    <div class="result-row"><span>Total Damage</span><span>${fmt(totalDamage)}</span></div>
+    <div class="result-row"><span>Energy cost</span><span>${energyInput!=='' ? fmt(Number(energyInput)) : '<span class="notavail">not available in API</span>'}</span></div>
+    <div class="result-row"><span>Damage per Energy</span><span>${dmgPerEnergy!==null ? fmt(dmgPerEnergy) : '<span class="notavail">n/a</span>'}</span></div>
+    <div class="result-row"><span>Healing amount</span><span>${healing!==null ? fmt(healing) : '<span class="notavail">not available in API</span>'}</span></div>
+    <div class="result-row"><span>Target HP → Remaining</span><span>${fmt(targetHP)} → ${fmt(remainingHP)}</span></div>
+  `;
+
+  breakdownEl.textContent =
+`Brainrot: ${rotName} (Base Attack stat from API: ${rot.Attack})
+Move selected: ${move || '(none — no move stats exist in API)'}
+Base Damage = Attack(${fmt(rot.Attack)}) × Level(${level}) × IV(${iv})  =  ${fmt(base)}
+${crit ? `Crit applied: ×${critMult} → ${fmt(perHit)} per hit` : 'No crit applied'}
+Total Damage = ${fmt(perHit)} × ${hits} hits = ${fmt(totalDamage)}
+Remaining Target HP = max(0, ${fmt(targetHP)} - ${fmt(totalDamage)}) = ${fmt(remainingHP)}
+Energy cost & healing values are not exposed anywhere by the Catch a Brainrot API — figures above only appear if you type a custom test value.`;
+}
+
+['calcRot','calcMove','calcLevel','calcIV','calcHits','calcTargetHP','calcCrit','calcCritMult','calcEnergy','calcHeal']
+  .forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', runCalculator);
+    el.addEventListener('change', runCalculator);
+  });
+
+/* ============================================================
+   BRAINROTS TAB
+   ============================================================ */
+function renderRots(){
+  const statusEl = document.getElementById('rotsStatus');
+  const grid = document.getElementById('rotsGrid');
+  const data = cache.rots;
+  if(!data){ statusEl.textContent = 'Loading brainrots...'; return; }
+
+  const search = document.getElementById('rotSearch').value.trim().toLowerCase();
+  const sortField = document.getElementById('sortField').value;
+  const sortDir = document.getElementById('sortDir').value;
+  const filterExc = document.getElementById('filterExclusive').value;
+
+  let entries = Object.values(data);
+  if(search) entries = entries.filter(r => r.FullName.toLowerCase().includes(search));
+  if(filterExc === 'exclusive') entries = entries.filter(r => r.IsExclusive);
+  if(filterExc === 'normal') entries = entries.filter(r => !r.IsExclusive);
+
+  entries.sort((a,b)=>{
+    let va = a[sortField], vb = b[sortField];
+    if(typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); return sortDir==='asc'? va.localeCompare(vb) : vb.localeCompare(va); }
+    return sortDir==='asc' ? va-vb : vb-va;
+  });
+
+  statusEl.style.display = entries.length ? 'none' : 'block';
+  statusEl.textContent = entries.length ? '' : 'No brainrots match your search.';
+
+  grid.innerHTML = entries.map(r => `
+    <div class="rot-card" data-name="${r.FullName}">
+      <img class="lazy-icon" data-src="${getIconUrl(r.Icon)}" alt="">
+      <div class="name">${r.FullName}${r.IsExclusive?' <span class="exclusive">★</span>':''}</div>
+      <div class="rarity">Rarity ${r.Rarity.toFixed(2)}</div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('img.lazy-icon').forEach(img=>{
+    img.src = img.dataset.src;
+    applyIconFallback(img);
+  });
+
+  grid.querySelectorAll('.rot-card').forEach(card=>{
+    card.addEventListener('click', ()=> openRotModal(card.dataset.name));
+  });
+}
+
+function openRotModal(name){
+  const r = cache.rots[name];
+  if(!r) return;
+  const modal = document.getElementById('modalBody');
+  modal.innerHTML = `
+    <button class="close-x" onclick="closeModal()">×</button>
+    <h3><img class="icon-sm" src="${getIconUrl(r.Icon)}" onerror="this.style.display='none'"> ${r.FullName}</h3>
+    <div class="badge">Attack ${r.Attack.toFixed(3)}</div>
+    <div class="badge">Health ${r.Health.toFixed(3)}</div>
+    <div class="badge">Speed ${r.Speed.toFixed(3)}</div>
+    <div class="badge">Rarity ${r.Rarity.toFixed(3)}</div>
+    ${r.IsExclusive ? '<div class="badge exclusive">Exclusive</div>' : ''}
+    ${r.SpawnLocation ? `<div class="badge">World ${r.SpawnLocation.World} · Zone ${r.SpawnLocation.Zone}</div>` : ''}
+    <p class="sub" style="margin-top:10px;">Short name: ${r.ShortenedName}</p>
+    <button class="btn" style="margin-top:10px;" onclick="sendToCalculator('${r.FullName.replace(/'/g,"\\'")}')">Use in Damage Calculator</button>
+  `;
+  document.getElementById('modalBg').classList.add('active');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
+document.getElementById('modalBg').addEventListener('click', (e)=>{ if(e.target.id==='modalBg') closeModal(); });
+
+function sendToCalculator(name){
+  document.getElementById('calcRot').value = name;
+  closeModal();
+  document.querySelector('nav button[data-tab="calc"]').click();
+  runCalculator();
+}
+
+document.getElementById('rotSearch').addEventListener('input', renderRots);
+document.getElementById('sortField').addEventListener('change', renderRots);
+document.getElementById('sortDir').addEventListener('change', renderRots);
+document.getElementById('filterExclusive').addEventListener('change', renderRots);
+
+/* ============================================================
+   INVENTORY TAB
+   ============================================================ */
+document.getElementById('invLoadBtn').addEventListener('click', loadInventory);
+document.getElementById('invUserId').addEventListener('keydown', e=>{ if(e.key==='Enter') loadInventory(); });
+
+async function loadInventory(){
+  const userId = document.getElementById('invUserId').value.trim();
+  const statusEl = document.getElementById('invStatus');
+  const resultsEl = document.getElementById('invResults');
+  resultsEl.innerHTML = '';
+
+  if(!userId || !/^\d+$/.test(userId)){
+    statusEl.className = 'status error';
+    statusEl.textContent = 'Please enter a valid numeric Roblox User ID.';
+    return;
+  }
+
+  statusEl.className = 'status';
+  statusEl.textContent = 'Loading inventory...';
+
+  try{
+    const data = await fetchInventory(userId);
+    renderInventory(data);
+  }catch(err){
+    statusEl.className = 'status error';
+    statusEl.innerHTML = explainFetchError(err) + '<br><br><button class="btn small" id="invRetry">Retry</button>';
+    const retry = document.getElementById('invRetry');
+    if(retry) retry.addEventListener('click', loadInventory);
+  }
+}
+
+function renderInventory(data){
+  const statusEl = document.getElementById('invStatus');
+  const resultsEl = document.getElementById('invResults');
+
+  const hasBag = data.Bag && Object.keys(data.Bag).length;
+  const hasPC = Array.isArray(data.PC) && data.PC.length;
+  const hasTeam = Array.isArray(data.Team) && data.Team.length;
+  const hasBoards = Array.isArray(data.Hoverboards) && data.Hoverboards.length;
+
+  if(!hasBag && !hasPC && !hasTeam && !hasBoards){
+    statusEl.className = 'status';
+    statusEl.textContent = 'This inventory appears to be empty.';
+    return;
+  }
+  statusEl.style.display = 'none';
+
+  let html = '';
+
+  if(hasTeam){
+    html += `<div class="card"><h2>Team (${data.Team.length})</h2>` +
+      data.Team.map(c=>creatureRow(c)).join('') + `</div>`;
+  }
+  if(hasPC){
+    html += `<div class="card"><h2>PC / Storage (${data.PC.length})</h2>` +
+      data.PC.map(c=>creatureRow(c)).join('') + `</div>`;
+  }
+  if(hasBoards){
+    html += `<div class="card"><h2>Hoverboards (${data.Hoverboards.length})</h2>` +
+      data.Hoverboards.map(h=>`<div class="list-item"><span>${h.Name}</span><span class="sub">${h.UID}</span></div>`).join('') +
+      `</div>`;
+  }
+  if(hasBag){
+    html += `<div class="card"><h2>Bag Items</h2>` +
+      Object.entries(data.Bag).sort((a,b)=>b[1]-a[1]).map(([name,qty])=>
+        `<div class="list-item"><span>${name}</span><span class="qty">×${qty}</span></div>`
+      ).join('') + `</div>`;
+  }
+
+  resultsEl.innerHTML = html;
+}
+
+function creatureRow(c){
+  const rot = cache.rots ? cache.rots[c.Species] : null;
+  const icon = rot ? `<img class="icon-sm" src="${getIconUrl(rot.Icon)}" onerror="this.style.display='none'">` : '';
+  return `<div class="list-item">
+    ${icon}
+    <span>${c.Nickname}${c.Nickname!==c.Species?` <span class="sub">(${c.Species})</span>`:''}
+      <div class="sub">Lv ${c.Level} · IV ${(c.IV*100).toFixed(1)}% · Box: ${c.Box || '—'}</div>
+      <div class="sub">Moves: ${(c.Moveset||[]).join(', ')}</div>
+    </span>
+  </div>`;
+}
+
+/* ============================================================
+   BAGS TAB
+   ============================================================ */
+function renderBags(){
+  const statusEl = document.getElementById('bagsStatus');
+  const grid = document.getElementById('bagsGrid');
+  const data = cache.bags;
+  if(!data){ statusEl.textContent = 'Loading bags...'; return; }
+
+  const search = document.getElementById('bagSearch').value.trim().toLowerCase();
+  let entries = Object.values(data);
+  if(search) entries = entries.filter(b => b.Name.toLowerCase().includes(search));
+
+  statusEl.style.display = entries.length ? 'none' : 'block';
+  statusEl.textContent = entries.length ? '' : 'No items match your search.';
+
+  grid.innerHTML = entries.map(b => `
+    <div class="rot-card">
+      <img class="lazy-icon" data-src="${getIconUrl(b.Icon)}" alt="">
+      <div class="name">${b.Name}</div>
+      <div class="sub" style="margin-top:4px;">${b.Description}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('img.lazy-icon').forEach(img=>{ img.src = img.dataset.src; applyIconFallback(img); });
+}
+document.getElementById('bagSearch').addEventListener('input', renderBags);
+
+/* ============================================================
+   SKINS TAB
+   ============================================================ */
+function renderSkins(){
+  const statusEl = document.getElementById('skinsStatus');
+  const grid = document.getElementById('skinsGrid');
+  const data = cache.skins;
+  if(!data){ statusEl.textContent = 'Loading skins...'; return; }
+
+  const entries = Object.values(data).sort((a,b)=>b.Speed-a.Speed);
+  statusEl.style.display = 'none';
+
+  grid.innerHTML = entries.map(s => `
+    <div class="rot-card">
+      <img class="lazy-icon" data-src="${getIconUrl(s.Icon)}" alt="">
+      <div class="name">${s.Name}</div>
+      <div class="rarity">Speed ${s.Speed}</div>
+      <div class="sub" style="margin-top:4px;">${s.Description}</div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('img.lazy-icon').forEach(img=>{ img.src = img.dataset.src; applyIconFallback(img); });
+}
+
+/* ============================================================
+   COMPARE TAB
+   ============================================================ */
+function populateCompareSelectors(rotsData){
+  const names = Object.keys(rotsData).sort();
+  const opts = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  document.getElementById('cmpA').innerHTML = opts;
+  document.getElementById('cmpB').innerHTML = opts;
+  if(names[1]) document.getElementById('cmpB').value = names[1];
+}
+
+function renderCompare(){
+  const data = cache.rots;
+  if(!data) return;
+  const a = data[document.getElementById('cmpA').value];
+  const b = data[document.getElementById('cmpB').value];
+  if(!a || !b) return;
+
+  const fields = [
+    ['Attack','Attack'],
+    ['Health','Health'],
+    ['Speed','Speed'],
+    ['Rarity','Rarity']
+  ];
+
+  let html = `<div><h3 style="margin:0 0 6px;">${a.FullName}</h3></div><div><h3 style="margin:0 0 6px;">${b.FullName}</h3></div>`;
+  fields.forEach(([label,key])=>{
+    const va = a[key], vb = b[key];
+    const aWin = va > vb, bWin = vb > va;
+    html += `<div>${label}: <span class="${aWin?'win':''}">${va.toFixed(3)}</span></div>`;
+    html += `<div>${label}: <span class="${bWin?'win':''}">${vb.toFixed(3)}</span></div>`;
+  });
+  document.getElementById('cmpResults').innerHTML = html;
+}
+document.getElementById('cmpA').addEventListener('change', renderCompare);
+document.getElementById('cmpB').addEventListener('change', renderCompare);
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function init(){
+  try{
+    const rots = await fetchRots();
+    populateCalcSelectors(rots);
+    populateCompareSelectors(rots);
+    renderRots();
+    renderCompare();
+    runCalculator();
+  }catch(err){
+    document.getElementById('rotsStatus').className = 'status error';
+    document.getElementById('rotsStatus').textContent = explainFetchError(err);
+    document.getElementById('calcResults').innerHTML = `<div class="status error">${explainFetchError(err)}</div>`;
+  }
+
+  try{
+    await fetchBags();
+    renderBags();
+  }catch(err){
+    document.getElementById('bagsStatus').className = 'status error';
+    document.getElementById('bagsStatus').textContent = explainFetchError(err);
+  }
+
+  try{
+    await fetchSkins();
+    renderSkins();
+  }catch(err){
+    document.getElementById('skinsStatus').className = 'status error';
+    document.getElementById('skinsStatus').textContent = explainFetchError(err);
+  }
+}
+init();
+</script>
+</body>
+</html>

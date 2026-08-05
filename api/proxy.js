@@ -1,28 +1,36 @@
 export default async function handler(req, res) {
-  // Replace this with the real external API URL
-  const API_URL = "https://example.com/api/data";
+  const { endpoint, id, icon } = req.query;
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  let url;
+
+  switch (endpoint) {
+    case "rots":
+      url = "https://indieun.com/cab/rots";
+      break;
+    case "bag":
+      url = "https://indieun.com/cab/bag";
+      break;
+    case "skins":
+      url = "https://indieun.com/cab/skins";
+      break;
+    case "inventory":
+      url = `https://indieun.com/cab/inventory/${id}`;
+      break;
+    case "icon":
+      url = `https://indieun.com/cab/icons/${icon}.png`;
+      break;
+    default:
+      return res.status(400).json({ error: "Invalid endpoint" });
   }
 
-  try {
-    const response = await fetch(API_URL, {
-      headers: {
-        Accept: "application/json",
-      },
-    });
+  const response = await fetch(url);
+  const body = await response.arrayBuffer();
 
-    const text = await response.text();
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Content-Type",
+    response.headers.get("content-type") || "application/octet-stream"
+  );
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Content-Type", response.headers.get("content-type") || "application/json");
-
-    return res.status(response.status).send(text);
-  } catch (error) {
-    return res.status(500).json({
-      error: "Failed to reach external API",
-      details: error.message,
-    });
-  }
+  res.status(response.status).send(Buffer.from(body));
 }
